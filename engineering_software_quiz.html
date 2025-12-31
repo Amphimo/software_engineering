@@ -1,0 +1,914 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>软件工程选择题答题系统</title>
+    <style>
+        body {
+            font-family: 'Microsoft YaHei', sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background-color: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 20px;
+        }
+        .question {
+            margin-bottom: 20px;
+            padding: 15px;
+            border-left: 4px solid #4CAF50;
+            background-color: #f9f9f9;
+        }
+        .question-number {
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #555;
+        }
+        .options {
+            margin-left: 20px;
+        }
+        .option {
+            margin: 5px 0;
+        }
+        .answer-section {
+            margin: 10px 0;
+        }
+        .radio-option {
+            margin: 5px 0;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        .result {
+            margin-top: 10px;
+            padding: 10px;
+            border-radius: 4px;
+        }
+        .correct {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .incorrect {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .progress {
+            margin: 20px 0;
+            text-align: center;
+        }
+        .navigation {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 20px;
+        }
+        .score {
+            text-align: center;
+            font-size: 18px;
+            margin: 20px 0;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>软件工程选择题答题系统</h1>
+        
+        <div class="progress">
+            <span id="progress-text">第 <span id="current-question">1</span> 题 / 共 109 题</span>
+        </div>
+        
+        <div class="score" id="score-display">得分: 0 / 0</div>
+        
+        <div id="question-container">
+            <!-- 题目将在这里动态生成 -->
+        </div>
+        
+        <div class="navigation">
+            <button id="prev-btn" onclick="prevQuestion()">上一题</button>
+            <button id="next-btn" onclick="nextQuestion()">下一题</button>
+        </div>
+        
+        <div style="text-align: center; margin-top: 20px;">
+            <button onclick="submitAll()">提交所有答案</button>
+        </div>
+    </div>
+
+    <script>
+        // 初始化变量
+        let currentQuestionIndex = 0;
+        let userAnswers = [];
+        let score = 0;
+        let answeredCount = 0;
+        
+        // 题目数据（简单格式，不包含复杂字符）
+        const questions = [];
+    questions.push({
+    number: 1,
+    text: "1．软件危机出现于60年代末，为了解决软件危机，人们提出了用____的原理来设计软件，这是软件工程诞生的基础。",
+    options: ["A．运筹学", "B．工程学", "C．软件学", "D．软件学"],
+    correctAnswer: "B"
+});
+questions.push({
+    number: 2,
+    text: "2．开发软件需高成本和产品的低质量之间有着尖锐的矛盾，这种现象称作____。",
+    options: ["A．软件投机", "B．软件危机", "C．软件工程", "D．软件产生"],
+    correctAnswer: "B"
+});
+questions.push({
+    number: 3,
+    text: "3．产生软件危机的原因有如下几点，除了______。",
+    options: ["A．软件开发过程未经审查", "B．软件开发不分阶段，开发人员没有明确的分工", "C．所开发的软件，除了程序清单外，没有其他文档", "D．采用工程设计的方法开发软件，不符合软件本身的特点"],
+    correctAnswer: "D"
+});
+questions.push({
+    number: 4,
+    text: "4．软件工程学是应用科学理论和工程上的技术指导软件开发的学科，其目的是__ _    _。",
+    options: ["A．引入新技术提高空间利用率", "B．用较少的投资获得高质量的软件", "C．缩短研制周期扩大软件功能", "D．硬软件结合使系统面向应用"],
+    correctAnswer: "B"
+});
+questions.push({
+    number: 5,
+    text: "5． Jackson程序设计方法是一种面向 _____ 的设计方法。",
+    options: ["A. 数据结构", "B. 数据流图", "C. IPO图", "D. 系统流程图"],
+    correctAnswer: "A"
+});
+questions.push({
+    number: 6,
+    text: "6．瀑布模型把软件生存周期划分为软件定义、软件开发和____三个阶段，而每一阶段又可细分为若干个更小的阶段。",
+    options: ["A．详细设计", "B．可行性分析", "C．运行及维护", "D．测试与排错"],
+    correctAnswer: "C"
+});
+questions.push({
+    number: 7,
+    text: "7．划分软件生存周期的阶段时所应遵循的基本原则是_____。",
+    options: ["A．各阶段的任务尽可能相关性", "B．各阶段的任务尽可能相对独立", "C．各阶段的任务在时间上连续", "D．各阶段的任务在时间上相对独立"],
+    correctAnswer: "B"
+});
+questions.push({
+    number: 8,
+    text: "8．一个软件项目是否进行开发的结论是在______文档中作出的。",
+    options: ["A．软件开发计划", "B．可行性报告", "C．需求分析说明书", "D．测试报告"],
+    correctAnswer: "B"
+});
+questions.push({
+    number: 9,
+    text: "9．系统分析员是____。",
+    options: ["A．用户中系统的直接使用者", "B．用户和软件人员的中间人", "C．软件的编程人员", "D．用户和软件人员的领导"],
+    correctAnswer: "B"
+});
+questions.push({
+    number: 10,
+    text: "10．下列叙述中，_______不属于数据字典的作用。",
+    options: ["A．作为编码阶段的描述工具", "B．为用户与开发人员之间统一认识", "C．作为概要设计的依据", "D．为需求分析阶段定义各类条目"],
+    correctAnswer: "A"
+});
+questions.push({
+    number: 11,
+    text: "11．使用结构化分析方法时，采用的基本手段是____。",
+    options: ["A．分解和抽象", "B．分解和综合", "C．归纳与推导", "D．试探与回溯"],
+    correctAnswer: "A"
+});
+questions.push({
+    number: 12,
+    text: "12．结构化系统分析主要是通过____进行分析的。",
+    options: ["A．算法分解", "B．控制结构分解", "C．数据结构分解", "D．处理功能分解"],
+    correctAnswer: "D"
+});
+questions.push({
+    number: 13,
+    text: "13．分层数据流图是一种比较严格又易于理解的描述方式，它的顶层描述了系统的__     __。",
+    options: ["A．总貌", "B．细节", "C．抽象", "D．软件的作者"],
+    correctAnswer: "A"
+});
+questions.push({
+    number: 14,
+    text: "14．需求分析说明书不能作为______。",
+    options: ["A. 可行性研究的依据", "B. 用户和开发人员之间的合同", "C．系统概要设计的依据", "D. 软件验收测试的依据"],
+    correctAnswer: "A"
+});
+questions.push({
+    number: 15,
+    text: "15．结构化分析方法以数据流图、____和加工说明等描述工具，即用直观的图和简洁的语言来描述软件系统模型。",
+    options: ["A．DFD图", "B．PAD图", "C．IPO图", "D．数据字典"],
+    correctAnswer: "D"
+});
+questions.push({
+    number: 16,
+    text: "16．不适于作为数据流图处理（加工）框名称的是____。",
+    options: ["A．人工校核工资数据", "B．工资支票数据", "C．打印工资支票", "D．计算职工工资"],
+    correctAnswer: "B"
+});
+questions.push({
+    number: 17,
+    text: "17．系统开发人员使用系统流程图或其他工具描述系统，估计每种方案的成本和效益的工作是在______阶段进行的。",
+    options: ["A．需求分析", "B．总体设计", "C．详细设计", "D．编码阶段"],
+    correctAnswer: "B"
+});
+questions.push({
+    number: 18,
+    text: "18．软件的____设计又称为总体设计，其主要任务是建立软件系统的总体结构。",
+    options: ["A．概要", "B．抽象", "C．逻辑", "D．规划"],
+    correctAnswer: "A"
+});
+questions.push({
+    number: 19,
+    text: "19．结构化设计方法采用变换分析和事务分析技术实现____。",
+    options: ["A．从数据结构导出程序结构", "B．从模块结构导出程序结构", "C．从模块结构导出数据结构", "D．从数据流图导出初始化结构图"],
+    correctAnswer: "D"
+});
+questions.push({
+    number: 20,
+    text: "20．结构化设计方法是面向____的设计方法。",
+    options: ["A．过程", "B．对象", "C．数据流", "D．数据结构"],
+    correctAnswer: "C"
+});
+questions.push({
+    number: 21,
+    text: "21．在下列工具与环境中（   ）属于较早期的CASE。",
+    options: ["A．基于信息工程CASE", "B．人工智能CASE", "C．结构的基于图形CASE", "D．集成的CASE环境"],
+    correctAnswer: "C"
+});
+questions.push({
+    number: 22,
+    text: "22．Putnam成本估算模型是一个（   ）模型。",
+    options: ["A．静态单变量", "B．动态单变量", "C．静态多变量", "D．动态多变量"],
+    correctAnswer: "D"
+});
+questions.push({
+    number: 23,
+    text: "23．在McCall软件质量度量模型中，（   ）属于面向软件产品修改。",
+    options: ["A．可靠性", "B．可重用性", "C．适应性", "D．可移植性"],
+    correctAnswer: "C"
+});
+questions.push({
+    number: 24,
+    text: "24．ISO的软件质量评价模型由3层组成，其中用于评价设计质量的准则是（   ）",
+    options: ["A．SQIC", "B．SQMC", "C．SQRC", "D．SQDC"],
+    correctAnswer: "D"
+});
+questions.push({
+    number: 25,
+    text: "25．软件复杂性度量的参数包括（    ）",
+    options: ["A．效率", "B．规模", "C．完整性", "D．容错性"],
+    correctAnswer: "B"
+});
+questions.push({
+    number: 26,
+    text: "26．对象实现了数据和操作的结合，使数据和操作（    ）于对象的统一体中。",
+    options: ["A．结合", "B．隐藏", "C．封装", "D．抽象"],
+    correctAnswer: "C"
+});
+questions.push({
+    number: 27,
+    text: "27．软件调试技术包括（   ）",
+    options: ["A．边界值分析", "B．演绎法", "C．循环覆盖", "D．集成测试"],
+    correctAnswer: "B"
+});
+questions.push({
+    number: 28,
+    text: "28．瀑布模型的存在问题是（    ）",
+    options: ["A．用户容易参与开发", "B．缺乏灵活性", "C．用户与开发者易沟通", "D．适用可变需求"],
+    correctAnswer: "B"
+});
+questions.push({
+    number: 29,
+    text: "29．软件测试方法中的静态测试方法之一为（    ）",
+    options: ["A．计算机辅助静态分析", "B．黑盒法", "C．路径覆盖", "D．边界值分析"],
+    correctAnswer: "A"
+});
+questions.push({
+    number: 30,
+    text: "30．软件生命周期中所花费用最多的阶段是（    ）",
+    options: ["A．详细设计", "B．软件编码", "C．软件测试", "D．软件维护"],
+    correctAnswer: "D"
+});
+questions.push({
+    number: 31,
+    text: "31．第一个体现结构化编程思想的程序设计语言是（    ）",
+    options: ["A．FORTRAN语言", "B．Pascal语言", "C．C语言", "D．PL/1语言"],
+    correctAnswer: "B"
+});
+questions.push({
+    number: 32,
+    text: "32．程序的三种基本控制结构是（    ）",
+    options: ["A．过程、子程序和分程序", "B．顺序、选择和重复", "C．递归、堆栈和队列", "D．调用、返回和转移"],
+    correctAnswer: "B"
+});
+questions.push({
+    number: 33,
+    text: "33．在详细设计阶段，经常采用的工具有（    ）",
+    options: ["A．PAD", "B．SA", "C．SC", "D．DFD"],
+    correctAnswer: "A"
+});
+questions.push({
+    number: 34,
+    text: "34．详细设计的结果基本决定了最终程序的（    ）",
+    options: ["A．代码的规模", "B．运行速度", "C．质量", "D．可维护性"],
+    correctAnswer: "C"
+});
+questions.push({
+    number: 35,
+    text: "35．需求分析中开发人员要从用户那里了解（    ）",
+    options: ["A．软件做什么", "B．用户使用界面", "C．输入的信息", "D．软件的规模"],
+    correctAnswer: "A"
+});
+questions.push({
+    number: 36,
+    text: "36．结构化程序设计主要强调的是（    ）",
+    options: ["A．程序的规模", "B．程序的效率", "C．程序设计语言的先进性", "D．程序易读性"],
+    correctAnswer: "D"
+});
+questions.push({
+    number: 37,
+    text: "37．IDEF图反映系统（    ）",
+    options: ["A．怎么做", "B．对谁做", "C．何时做", "D．做什么"],
+    correctAnswer: "D"
+});
+questions.push({
+    number: 38,
+    text: "38．经济可行性研究的范围包括（    ）",
+    options: ["A．资源有效性", "B．管理制度", "C．效益分析", "D．开发风险"],
+    correctAnswer: "C"
+});
+questions.push({
+    number: 39,
+    text: "39．可行性分析是在系统开发的早期所做的一项重要的论证工作，它是决定该系统是否开发的决策依据，因必须给出（    ）的回答。",
+    options: ["A．确定", "B．行或不行", "C．正确", "D．无二义"],
+    correctAnswer: "B"
+});
+questions.push({
+    number: 40,
+    text: "40．需求分析阶段的任务是确定（     ）",
+    options: ["A．软件开发方法", "B．软件开发工具", "C．软件开发费", "D．软件系统的功能"],
+    correctAnswer: "D"
+});
+questions.push({
+    number: 41,
+    text: "41．结构化设计采用模块化方法的主要出发点是______。",
+    options: ["A．增加内聚性", "B．减少耦合度", "C．提高有效性", "D．降低复杂度"],
+    correctAnswer: "D"
+});
+questions.push({
+    number: 42,
+    text: "42．下列_____不是模块化设计的目的。",
+    options: ["A.可采用结构化设计方法", "B.降低复杂度", "C.有利于信息隐蔽", "D.描述系统的功能与性能"],
+    correctAnswer: "D"
+});
+questions.push({
+    number: 43,
+    text: "43．一个模块直接控制（调用）的下层模块的数目称为模块的_______。",
+    options: ["A．扇入数", "B．扇出数", "C．宽度", "D．作用域"],
+    correctAnswer: "B"
+});
+questions.push({
+    number: 44,
+    text: "44．某个模块的作用域是指______。",
+    options: ["A．被该模块调用的所用模块", "B．调用该模块的所有模块", "C．与该模块相关联的所有模块", "D．受该模块内的判定影响的所有模块"],
+    correctAnswer: "D"
+});
+questions.push({
+    number: 45,
+    text: "45．模块本身的内聚是模块独立性的重要度量因素之一，在七类内聚中，具有最强内聚的一类是____。",
+    options: ["A．顺序性内聚", "B．过程性内聚", "C．逻辑性内聚", "D．功能性内聚"],
+    correctAnswer: "D"
+});
+questions.push({
+    number: 46,
+    text: "46．如果模块中所有成分引用共同的数据，该模块内的联系类型是____。",
+    options: ["A．顺序内聚", "B．功能内聚", "C．通信内聚", "D．过程内聚"],
+    correctAnswer: "C"
+});
+questions.push({
+    number: 47,
+    text: "47．初始化模块和结束模块从块内联系看，被称为____模块。",
+    options: ["A．过程内聚", "B．功能内聚", "C．时间内聚", "D．逻辑内聚"],
+    correctAnswer: "C"
+});
+questions.push({
+    number: 48,
+    text: "48．若一模块内部的处理动作为：成分A的输出是成分B的输入，则该模块的聚合性称为______。",
+    options: ["A、顺序内聚", "B、功能内聚", "C、过程内聚", "D、通信内聚"],
+    correctAnswer: "A"
+});
+questions.push({
+    number: 49,
+    text: "49．某模块的功能是打印录取通知书或不录取通知书，调用模块可通过向此模块传递布尔标志信息决定本次调用哪种通知书的打印，这种模块之间的耦合称为___      _。",
+    options: ["A．数据耦合", "B．混合耦合", "C．公共耦合", "D．控制耦合"],
+    correctAnswer: "D"
+});
+questions.push({
+    number: 50,
+    text: "50．要减少两个模块之间的耦合，则必须____。",
+    options: ["A．两个模块间的调用次数要少", "B．模块间传递的参数要少", "C．模块间传递的参数要少且布传递开关型参数", "D．模块间传递参数要少且不传递开关型参数以及两模块不引用同样全局变量"],
+    correctAnswer: "D"
+});
+questions.push({
+    number: 51,
+    text: "51．下列耦合度表示中，最弱的耦合形式是______。",
+    options: ["A．特征耦合", "B．公共耦合", "C．数据耦合", "D．数据结构"],
+    correctAnswer: "C"
+});
+questions.push({
+    number: 52,
+    text: "52．一个模块传送给另一模块的参数是由单个数据项组成的数组，它属于____耦合。",
+    options: ["A. 数据型", "B.复合型", "C.内容型", "D.公共型"],
+    correctAnswer: "A"
+});
+questions.push({
+    number: 53,
+    text: "53．软件的____一般由两次故障平均间隔时间和故障平均恢复时间来度量；",
+    options: ["A．可维护性", "B．可靠性", "C．效率", "D．可理解性"],
+    correctAnswer: "B"
+});
+questions.push({
+    number: 54,
+    text: "54．PAD（Problem Analysis Diagram）图是一种____工具。",
+    options: ["A．系统描述", "B．详细设计", "C．测试", "D．编程辅助"],
+    correctAnswer: "B"
+});
+questions.push({
+    number: 55,
+    text: "55．采用____且编写程序，可提高程序的可移植性；",
+    options: ["A．机器语言", "B．宏指令", "C．汇编语言", "D．高级语言"],
+    correctAnswer: "D"
+});
+questions.push({
+    number: 56,
+    text: "56．程序流程图、N-S图和PAD图是____使用的表达工具。",
+    options: ["A．设计阶段的概要设计", "B．设计阶段的详细设计", "C．编码阶段", "D．测试阶段"],
+    correctAnswer: "B"
+});
+questions.push({
+    number: 57,
+    text: "57．模块内部的算法设计在结构化方法的______阶段进行。",
+    options: ["A．系统分析", "B．概要设计", "C．详细设计", "D．编码（实现）"],
+    correctAnswer: "C"
+});
+questions.push({
+    number: 58,
+    text: "58．源程序的版面文档要求应有变量说明、适当注释和____。",
+    options: ["A．框图", "B．统一书写格式", "C．修改记录", "D．编程日期"],
+    correctAnswer: "B"
+});
+questions.push({
+    number: 59,
+    text: "59．提高程序可读性的有力手段是______。",
+    options: ["A．选好一种程序设计语言", "B．显式说明一切变量", "C．使用三种标准控制语句", "D．给程序加注释"],
+    correctAnswer: "D"
+});
+questions.push({
+    number: 60,
+    text: "60．在软件工程中，高质量的文档标准是完整性、一致性和____。",
+    options: ["A．统一性", "B．安全性", "C．无二义性", "D．组合性"],
+    correctAnswer: "C"
+});
+questions.push({
+    number: 61,
+    text: "61. 软件工程的概念是哪年提出的( )。",
+    options: ["A. 1988", "B. 1968", "C. 1948", "D. 1928"],
+    correctAnswer: "B"
+});
+questions.push({
+    number: 62,
+    text: "62. 瀑布模型的关键不足在于( )。",
+    options: ["A. 过于简单", "B. 各个阶段需要进行评审", "C. 过于灵活", "D. 不能适应需求的动态变更"],
+    correctAnswer: "D"
+});
+questions.push({
+    number: 63,
+    text: "63. 以下哪一项不是软件危机的表现形式( )。",
+    options: ["A. 开发的软件不满足用户需要", "B. 开发的软件可维护性差", "C. 开发的软件价格便宜", "D. 开发的软件可靠性差"],
+    correctAnswer: "C"
+});
+questions.push({
+    number: 64,
+    text: "64. 软件可行性研究实质上是要进行一次( )需求分析、设计过程。",
+    options: ["A. 简化、压缩的", "B. 详细的", "C. 彻底的", "D. 深入的"],
+    correctAnswer: "A"
+});
+questions.push({
+    number: 65,
+    text: "65. 结构化设计是一种面向( )的设计方法。",
+    options: ["A. 数据流", "B. 模块", "C. 数据结构", "D. 程序"],
+    correctAnswer: "A"
+});
+questions.push({
+    number: 66,
+    text: "66. 与确认测试阶段有关的文档是( )。",
+    options: ["A. 需求规格说明书", "B. 概要设计说明书", "C. 详细设计说明书", "D. 源程序"],
+    correctAnswer: "A"
+});
+questions.push({
+    number: 67,
+    text: "67. 软件开发的需求活动，其主要任务是（ ）。",
+    options: ["A. 给出软件解决方案", "B. 给出系统模块结构", "C. 定义模块算法", "D. 定义需求并建立系统模型"],
+    correctAnswer: "D"
+});
+questions.push({
+    number: 68,
+    text: "68. 以下说法错误的是( )。",
+    options: ["A. 文档仅仅描述和规定了软件的使用范围及相关的操作命令", "B. 文档也是软件产品的一部分，没有文档的软件就不成软件", "C. 软件文档的编制在软件开发工作中占有突出的地位和相当大的工作量", "D. 高质量文档对于发挥软件产品的效益有着重要的意义"],
+    correctAnswer: "A"
+});
+questions.push({
+    number: 69,
+    text: "69. 一个项目是否开发，从经济上来说是否可行，归根结底是取决于( )。",
+    options: ["A. 成本估算", "B. 项目计划", "C. 工程管理", "D. 工程网络图"],
+    correctAnswer: "A"
+});
+questions.push({
+    number: 70,
+    text: "70. 在面向对象的设计中，我们应遵循的设计准则除了模块化、抽象、低耦合、高内聚以外，还有( )。",
+    options: ["A. 隐藏复杂性", "B. 信息隐蔽", "C. 经常类的复用", "D. 类的开发"],
+    correctAnswer: "B"
+});
+questions.push({
+    number: 71,
+    text: "71. 面向对象的主要特征除对象惟一性、封装、继承外，还有( )。",
+    options: ["A. 多态性", "B. 完整性", "C. 可移植性", "D. 兼容性"],
+    correctAnswer: "A"
+});
+questions.push({
+    number: 72,
+    text: "72. 在考察系统的一些涉及时序和改变的状况时，要用动态模型来表示。动态模型着重于系统的控制逻辑，它包括两个图：一个是事件追踪图，另一个是( )。",
+    options: ["A. 数据流图", "B. 状态图", "C. 系统结构图", "D. 用例图"],
+    correctAnswer: "B"
+});
+questions.push({
+    number: 73,
+    text: "73. 面说法正确的是( )。",
+    options: ["A. 经过测试没有发现错误说明程序正确", "B. 测试的目标是为了证明程序没有错误", "C. 成功的测试是发现了迄今尚未发现的错误的测试", "D. 成功的测试是没有发现错误的测试"],
+    correctAnswer: "C"
+});
+questions.push({
+    number: 74,
+    text: "74. ( )能够有效地检测输入条件的各种组合可能会引起的错误。",
+    options: ["A. 等价类划分", "B. 边界值分析", "C. 错误推测", "D. 因果图", "A. 组装", "B. 整体部分", "C. has a", "D. 一般特殊"],
+    correctAnswer: "D"
+});
+questions.push({
+    number: 75,
+    text: "76、软件维护产生的副作用，是指（  ）",
+    options: ["A.开发时的错误", "B.隐含的错误", "C.因修改软件而造成的错误", "D.运行时误操作"],
+    correctAnswer: "D"
+});
+questions.push({
+    number: 76,
+    text: "77、使用程序设计的控制结构导出测试用例的测试方法是（    ）",
+    options: ["A.黑盒测试", "B.白盒测试", "C.边界测试", "D.系统测试"],
+    correctAnswer: "C"
+});
+questions.push({
+    number: 77,
+    text: "78、软件详细设计的主要任务是确定每个模块的（   ）",
+    options: ["A.算法和使用的数据结构", "B.外部接口", "C.功能", "D.编程"],
+    correctAnswer: "B"
+});
+questions.push({
+    number: 78,
+    text: "79、软件结构图的形态特征能反映程序重用率的是（   ）",
+    options: ["A.深度", "B.宽度", "C.扇入", "D.扇出"],
+    correctAnswer: "A"
+});
+questions.push({
+    number: 79,
+    text: "80、为了提高模块的独立性，模块内部最好是（    ）",
+    options: ["A.逻辑内聚", "B.时间内聚", "C.功能内聚", "D.通信内聚"],
+    correctAnswer: "C"
+});
+questions.push({
+    number: 80,
+    text: "81、软件是一种（  ）",
+    options: ["A.程序", "B.数据", "C.逻辑产品", "D.物理产品"],
+    correctAnswer: "C"
+});
+questions.push({
+    number: 81,
+    text: "82、需求分析最终结果是产生（   ）",
+    options: ["A.项目开发计划", "B.需求规格说明书", "C.设计说明书", "D.可行性分析报告"],
+    correctAnswer: "C"
+});
+questions.push({
+    number: 82,
+    text: "83、因计算机硬件和软件环境的变化而作出的修改软件的过程称为(      )",
+    options: ["A.纠正性维护", "B.适应性维护", "C.完善性维护", "D.预防性维护"],
+    correctAnswer: "B"
+});
+questions.push({
+    number: 83,
+    text: "84、下列属于维护阶段的文档是(      )",
+    options: ["A.软件规格说明", "B.用户操作手册", "C.软件问题报告", "D.软件测试分析报告"],
+    correctAnswer: "B"
+});
+questions.push({
+    number: 84,
+    text: "85、若有一个计算类型的程序，它的输入量只有一个X，其范围是［-1.0，1.0］，现从输入的角度考虑一组测试用例：-1.001，-1.0，1.0，1.001。设计这组测试用例的方法是(      )",
+    options: ["A.条件覆盖法", "B.等价分类法", "C.边界值分析法", "D.错误推测法"],
+    correctAnswer: "C"
+});
+questions.push({
+    number: 85,
+    text: "86、研究开发所需要的成本和资源是属于可行性研究中的(   )研究的一方面。",
+    options: ["A.技术可行性", "B.经济可行性", "C. 社会可行性", "D.法律可行性"],
+    correctAnswer: "C"
+});
+questions.push({
+    number: 86,
+    text: "87、按软件生命周期方法设计软件的过程中，画数据流图属于下面哪个阶段的工作（ ）",
+    options: ["A.需求分析", "B.程序设计", "C.详细设计", "D.软件维护"],
+    correctAnswer: "B"
+});
+questions.push({
+    number: 87,
+    text: "88、经过严密的软件测试后所提交给用户的软件产品中（  ）",
+    options: ["A.软件不再包含任何错误", "B.还可能包含少量软件错误", "C.所提交给用户的可执行文件不会含有错误", "D.文档中不会含有错误。"],
+    correctAnswer: "A"
+});
+questions.push({
+    number: 88,
+    text: "89、等价划分测试方法属于（  ）",
+    options: ["A.黑盒测试", "B.白盒测试", "C.边界测试", "D.系统测试"],
+    correctAnswer: "B"
+});
+questions.push({
+    number: 89,
+    text: "90、软件按照设计的要求，在规定时间和条件下达到不出故障，持续运行的要求的质量特性称为(    )",
+    options: ["A.可用性", "B.可靠性", "C.正确性", "D.完整性"],
+    correctAnswer: "A"
+});
+questions.push({
+    number: 90,
+    text: "91. 中级结构性成本模型COCOMO是一个(    )。",
+    options: ["A. 静态单变量模型", "B. 动态单变量模型", "C. 静态多变量模型", "D. 动态多变量模型"],
+    correctAnswer: "B"
+});
+questions.push({
+    number: 91,
+    text: "92. 研究开发所需要的成本和资源是属于可行性研究中的(    )研究的一方面。",
+    options: ["A. 技术可行性", "B. 经济可行性", "C. 社会可行性", "D. 法律可行性"],
+    correctAnswer: "C"
+});
+questions.push({
+    number: 92,
+    text: "93. 面向对象的开发方法中，(  )将是面向对象技术领域内占主导地位的标准建模语言。",
+    options: ["A. Booch方法", "B. Coad方法", "C. UML语言", "D. OMT方法"],
+    correctAnswer: "B"
+});
+questions.push({
+    number: 93,
+    text: "94. 瀑布模型本质上是一种(    )。",
+    options: ["A. 线性顺序模型", "B.顺序迭代模型", "C.线性迭代模型", "D.及早见产品模型"],
+    correctAnswer: "C"
+});
+questions.push({
+    number: 94,
+    text: "95. 在SD方法中全面指导模块划分的最重要的原则是(    )。",
+    options: ["A. 程序模块化", "B. 模块高内聚", "C. 模块低耦合", "D. 模块独立性"],
+    correctAnswer: "A"
+});
+questions.push({
+    number: 95,
+    text: "96. 软件可维护性的特性中相互矛盾的是(    )。",
+    options: ["A. 可修改性和可理解性", "B. 可测试性和可理解性", "C. 效率和可修改性", "D. 可理解性和可读性"],
+    correctAnswer: "D"
+});
+questions.push({
+    number: 96,
+    text: "97. 软件维护产生的副作用，是指(    )。",
+    options: ["A. 开发时的错误", "B. 隐含的错误", "C. 因修改软件而造成的错误", "D. 运行时误操作"],
+    correctAnswer: "C"
+});
+questions.push({
+    number: 97,
+    text: "98. 用黑盒技术设计测试用例的方法之一为(    )。",
+    options: ["A. 边界值分析", "B. 逻辑覆盖", "C. 循环覆盖", "D. 基本路径测试"],
+    correctAnswer: "C"
+});
+questions.push({
+    number: 98,
+    text: "99. 软件测试方法中的(    )属于静态测试方法。",
+    options: ["A. 黑盒法", "B. 路径覆盖", "C. 错误推测", "D. 人工检测"],
+    correctAnswer: "A"
+});
+questions.push({
+    number: 99,
+    text: "100. Ada语言是在Pascal语言基础上开发出来的，适用于(    )项目的应用领域。",
+    options: ["A. 科学工程计算", "B. 数据库应用", "C. 实时处理", "D. 人工智能"],
+    correctAnswer: "D"
+});
+questions.push({
+    number: 100,
+    text: "101. 程序设计语言的工程特性之一为(    )。",
+    options: ["A. 软件的可重用性", "B. 数据结构的描述性", "C. 抽象类型的描述性", "D. 数据库的易操作性"],
+    correctAnswer: "C"
+});
+questions.push({
+    number: 101,
+    text: "102. 软件详细设计的主要任务是确定每个模块的(    )。",
+    options: ["A. 算法和使用的数据结构", "B. 外部接口", "C. 功能", "D. 编程"],
+    correctAnswer: "A"
+});
+questions.push({
+    number: 102,
+    text: "103. PAD图为(    )提供了有力的工具。",
+    options: ["A. 系统分析", "B. 软件的自动化生成", "C. 自动分析数据", "D. 测试软件"],
+    correctAnswer: "A"
+});
+questions.push({
+    number: 103,
+    text: "104. 软件结构图的形态特征能反映程序复用率的是(    )。",
+    options: ["A. 深度", "B. 宽度", "C. 扇入", "D. 扇出"],
+    correctAnswer: "B"
+});
+questions.push({
+    number: 104,
+    text: "105.软件按照设计的要求，在规定时间和条件下达到不出故障，持续运行的要求的质量特性称为(    )。",
+    options: ["A. 可用性", "B. 可靠性", "C. 正确性", "D. 完整性"],
+    correctAnswer: "C"
+});
+questions.push({
+    number: 105,
+    text: "106. 为了提高模块的独立性，模块内部最好是(    )。",
+    options: ["A. 逻辑内聚", "B. 时间内聚", "C. 功能内聚", "D. 通信内聚"],
+    correctAnswer: "B"
+});
+questions.push({
+    number: 106,
+    text: "107. 软件结构图中，模块框之间若有直线连接，表示它们之间存在(    )。",
+    options: ["A. 调用关系", "B. 组成关系", "C. 链接关系", "D. 顺序执行关系"],
+    correctAnswer: "C"
+});
+questions.push({
+    number: 107,
+    text: "108. 需求分析最终结果是产生(    )。",
+    options: ["A.项目开发计划", "B.需求规格说明书", "C.设计说明书", "D.可行性分析报告"],
+    correctAnswer: "A"
+});
+questions.push({
+    number: 108,
+    text: "109. 可行性研究要进行一次(    )需求分析。",
+    options: ["A. 深入的", "B. 详尽的", "C. 彻底的", "D. 简化的、压缩了的"],
+    correctAnswer: "B"
+});
+questions.push({
+    number: 109,
+    text: "110. 软件是一种(    )。",
+    options: ["A. 程序", "B. 数据", "C. 逻辑产品", "D. 物理产品"],
+    correctAnswer: "D"
+});
+
+        // 初始化用户答案数组
+        userAnswers = new Array(questions.length).fill("");
+        
+        // 显示当前题目
+        function displayQuestion() {
+            const questionContainer = document.getElementById("question-container");
+            const currentQuestion = questions[currentQuestionIndex];
+            
+            let html = `
+                <div class="question">
+                    <div class="question-number">${currentQuestion.number}. ${currentQuestion.text}</div>
+                    <div class="options">
+            `;
+            
+            currentQuestion.options.forEach(option => {
+                html += `<div class="option">${option}</div>`;
+            });
+            
+            html += `
+                    </div>
+                    <div class="answer-section">
+                        <p>请选择您的答案:</p>
+            `;
+            
+            // 添加单选按钮
+            const options = ['A', 'B', 'C', 'D'];
+            options.forEach(opt => {
+                const isChecked = userAnswers[currentQuestionIndex] === opt;
+                html += `<div class="radio-option">
+                            <input type="radio" id="opt-${opt}" name="question-${currentQuestion.number}" value="${opt}" ${isChecked ? 'checked' : ''} onchange="updateAnswer('${opt}')">
+                            <label for="opt-${opt}">${opt}</label>
+                        </div>`;
+            });
+            
+            html += `
+                    </div>
+                    <div id="result" class="result"></div>
+                </div>
+            `;
+            
+            questionContainer.innerHTML = html;
+            document.getElementById("current-question").textContent = currentQuestion.number;
+            // 更新结果显示
+            updateResultDisplay();
+        }
+
+        // 更新答案
+        function updateAnswer(answer) {
+            userAnswers[currentQuestionIndex] = answer;
+            updateResultDisplay();
+            updateScore();
+        }
+
+        // 更新结果显示
+        function updateResultDisplay() {
+            const resultDiv = document.getElementById("result");
+            const userAnswer = userAnswers[currentQuestionIndex];
+            const currentQuestion = questions[currentQuestionIndex];
+            
+            if (userAnswer === "") {
+                resultDiv.innerHTML = "";
+                resultDiv.className = "result";
+                return;
+            }
+            
+            if (userAnswer === currentQuestion.correctAnswer) {
+                resultDiv.innerHTML = "✓ 回答正确!";
+                resultDiv.className = "result correct";
+            } else {
+                resultDiv.innerHTML = `✗ 回答错误! 正确答案是: <strong>${currentQuestion.correctAnswer}</strong>`;
+                resultDiv.className = "result incorrect";
+            }
+        }
+
+        // 更新分数
+        function updateScore() {
+            score = 0;
+            answeredCount = 0;
+            
+            for (let i = 0; i < questions.length; i++) {
+                if (userAnswers[i] !== "") {
+                    answeredCount++;
+                    if (userAnswers[i] === questions[i].correctAnswer) {
+                        score++;
+                    }
+                }
+            }
+            
+            document.getElementById("score-display").textContent = `得分: ${score} / ${answeredCount}`;
+        }
+
+        // 下一题
+        function nextQuestion() {
+            if (currentQuestionIndex < questions.length - 1) {
+                currentQuestionIndex++;
+                displayQuestion();
+            }
+        }
+
+        // 上一题
+        function prevQuestion() {
+            if (currentQuestionIndex > 0) {
+                currentQuestionIndex--;
+                displayQuestion();
+            }
+        }
+
+        // 提交所有答案
+        function submitAll() {
+            let correctCount = 0;
+            let totalAnswered = 0;
+            
+            for (let i = 0; i < questions.length; i++) {
+                if (userAnswers[i] !== "") {
+                    totalAnswered++;
+                    if (userAnswers[i] === questions[i].correctAnswer) {
+                        correctCount++;
+                    }
+                }
+            }
+            
+            alert(`答题完成!
+已回答: ${totalAnswered}/${questions.length}
+正确: ${correctCount}
+得分: ${correctCount}/${totalAnswered}`);
+        }
+
+        // 初始化页面
+        window.onload = function() {
+            displayQuestion();
+        };
+    </script>
+</body>
+</html>
